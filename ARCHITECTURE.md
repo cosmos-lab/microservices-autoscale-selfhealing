@@ -1,8 +1,7 @@
 
 # Infra
 
-```
-Terraform
+## Terraform
 Infrastructure as Code (IaC) tool for provisioning cloud resources.
 
 PLACE:
@@ -24,10 +23,10 @@ INPUT:
 OUTPUT:
 - Running Kubernetes Cluster Infra
 
-        ↓
 
-Helm
+## Helm
 Kubernetes package manager for deploying applications and managing resources.
+
 PLACE:
 - Runs From:
     Local Machine / CI-CD Runner
@@ -44,10 +43,11 @@ OUTPUT:
 - Installed / Upgraded Application in Kubernetes
 - Sets initial desired state of pods, services, and configuration
 
-        ↓
 
-Kubernetes
+
+## Kubernetes
 Container orchestration platform that manages deployment, scaling, and self-healing.
+
 PLACE:
 - Lives On:
     EKS Control Plane (Managed by AWS)
@@ -69,10 +69,50 @@ OUTPUT:
 - Recreate Pod
 - Reschedule Pod
 
-        ↓
+### HPA (Horizontal Pod Autoscaler)
+Automatically scales Kubernetes pods based on observed metrics like CPU and memory.
+
+PLACE:
+- Built Inside Kubernetes Control Plane
+
+INPUT:
+- CPU / Memory Metrics From Prometheus
+
+OUTPUT:
+- Scale Pods 3 → 10 → 20
+
+### KEDA (Kubernetes Event Driven Autoscaler)
+Scales Kubernetes workloads based on external event sources like Kafka or Prometheus metrics. KEDA can scale pods based on queue length.
+
+PLACE:
+- Runs As:
+    Kubernetes Operator Pod
+
+INPUT:
+- Queue Length
+- Kafka Lag
+- Custom Prometheus Metrics
+
+OUTPUT:
+- Scale Pods Based On Events
+
+### Cluster Autoscaler
+Automatically adjusts the number of nodes in a Kubernetes cluster based on pod resource requirements.
+
+PLACE:
+- Runs As:
+    Kubernetes Pod
+
+INPUT:
+- Pending Pods
+- Node Resource Exhaustion
+
+OUTPUT:
+- Requests AWS To Add EC2 Node
 
 OpenTelemetry
 Observability framework for collecting metrics, logs, and traces from applications.
+
 PLACE:
 - Runs As:
     DaemonSet (On Every Kubernetes Node)
@@ -82,8 +122,8 @@ INPUT:
 - Pod Metrics
 - Container Logs
 - Network Latency
-- API (Application Programming Interface) Request Duration
-- DB (Database) Query Time
+- API Request Duration
+- DB Query Time
 - Kubernetes Node & Pod Health
 
 OUTPUT:
@@ -91,10 +131,76 @@ OUTPUT:
 - Logs → ELK Stack
 - Traces → Jaeger
 
+### Jaeger
+Distributed tracing system for monitoring and troubleshooting microservices.
+
+PLACE:
+- Runs As:
+    Kubernetes Pod OR EC2
+
+INPUT:
+- Traces From OpenTelemetry
+
+OUTPUT:
+- Slow Service Detection
+- DB Query Delay
+- API Dependency Timeout
+
+### LitmusChaos
+Chaos engineering framework for testing system resilience and validating self-healing mechanisms.
+
+PLACE:
+- Runs As:
+    Kubernetes Pod
+
+INPUT:
+- Chaos Experiment YAML
+
+OUTPUT:
+- Simulated Pod Kill
+- Node Crash
+- Network Delay
+- Validates:
+    Pod Recreation
+    Auto Scaling
+    Traffic Rerouting
+    Deployment Rollback
+
+### OPA (Open Policy Agent)
+Policy enforcement tool for Kubernetes to ensure compliance and security.
+
+PLACE:
+- Runs As:
+    Kubernetes Admission Controller
+
+INPUT:
+- Deployment Request
+
+OUTPUT:
+- Block Unsafe Deployment
+
+### Istio
+Service mesh that manages traffic routing, resilience, and security between services.
+
+PLACE:
+- Runs As:
+    Sidecar Proxy Inside Each Pod
+
+INPUT:
+- Service To Service Traffic
+
+OUTPUT:
+- Circuit Breaker
+- Retry Failed Request
+- Route Traffic To Healthy Pod
+- Outlier Detection (Kicks Failing Pods Out Before Crash)
+
         ↓
 
-Prometheus
+
+## Prometheus
 Monitoring system and time-series database for metrics collection and alerting.
+
 PLACE:
 - Runs As:
     Kubernetes Pod (Monitoring Namespace)
@@ -103,22 +209,21 @@ INPUT:
 - Metrics From OpenTelemetry
 
 Detects:
-- CPU (Central Processing Unit) Usage
+- CPU Usage
 - Memory Usage
 - HTTP 5xx Error Rate
-- Disk IO (Input Output)
+- Disk IO
 - Pod Restart Count
 - Network Packet Loss
 
 OUTPUT:
 - Sends Metrics To:
-    HPA (Horizontal Pod Autoscaler)
+    HPA / KEDA
     Grafana Alert Rules
 
-        ↓
-
-ELK Stack
+## ELK Stack
 Centralized logging platform (Elasticsearch, Logstash, Kibana) for storing and visualizing logs.
+
 PLACE:
 - Elasticsearch → EC2 OR Kubernetes Pod
 - Logstash → Kubernetes Pod
@@ -136,10 +241,9 @@ OUTPUT:
 - Error Log Alerts
 - Visualization via Kibana
 
-        ↓
-
-Grafana
+## Grafana
 Visualization and alerting platform for metrics and logs.
+
 PLACE:
 - Runs As:
     Kubernetes Pod OR EC2 Instance
@@ -161,54 +265,9 @@ OUTPUT:
     HPA / KEDA
     Remediation Platform
 
-        ↓
-
-HPA (Horizontal Pod Autoscaler)
-Automatically scales Kubernetes pods based on observed metrics like CPU and memory.
-PLACE:
-- Built Inside Kubernetes Control Plane
-
-INPUT:
-- CPU / Memory Metrics From Prometheus
-
-OUTPUT:
-- Scale Pods 3 → 10 → 20
-
-        ↓
-
-KEDA (Kubernetes Event Driven Autoscaler)
-Scales Kubernetes workloads based on external event sources like Kafka or Prometheus metrics.
-PLACE:
-- Runs As:
-    Kubernetes Operator Pod
-
-INPUT:
-- Queue Length
-- Kafka Lag
-- Custom Prometheus Metrics
-
-OUTPUT:
-- Scale Pods Based On Events
-
-        ↓
-
-Cluster Autoscaler
-Automatically adjusts the number of nodes in a Kubernetes cluster based on pod resource requirements.
-PLACE:
-- Runs As:
-    Kubernetes Pod
-
-INPUT:
-- Pending Pods
-- Node Resource Exhaustion
-
-OUTPUT:
-- Requests AWS To Add EC2 Node
-
-        ↓
-
-ArgoCD
+## ArgoCD
 GitOps continuous delivery tool for Kubernetes, keeping deployments in sync with Git repositories.
+
 PLACE:
 - Runs As:
     Kubernetes Pod
@@ -217,65 +276,17 @@ INPUT:
 - Git Repo Desired State
 
 Detects:
-- CrashLoopBackOff (Container Restart Loop)
+- CrashLoopBackOff
 - Replica Mismatch
 - Live State Drift (e.g., Manual CLI Changes to Replica Count)
 
 OUTPUT:
 - Rollback Deployment
-- Heal Live State Drift (Revert to Git Desired State)
+- Heal Live State Drift
 
-        ↓
-
-OPA (Open Policy Agent)
-Policy enforcement tool for Kubernetes to ensure compliance and security.
-PLACE:
-- Runs As:
-    Kubernetes Admission Controller
-
-INPUT:
-- Deployment Request
-
-OUTPUT:
-- Block Unsafe Deployment
-
-        ↓
-
-Istio
-Service mesh that manages traffic routing, resilience, and security between services.
-PLACE:
-- Runs As:
-    Sidecar Proxy Inside Each Pod
-
-INPUT:
-- Service To Service Traffic
-
-OUTPUT:
-- Circuit Breaker
-- Retry Failed Request
-- Route Traffic To Healthy Pod
-- Outlier Detection (Kicks Failing Pods Out Before Crash)
-
-        ↓
-
-Jaeger
-Distributed tracing system for monitoring and troubleshooting microservices.
-PLACE:
-- Runs As:
-    Kubernetes Pod OR EC2
-
-INPUT:
-- Traces From OpenTelemetry
-
-OUTPUT:
-- Slow Service Detection
-- DB Query Delay
-- API Dependency Timeout
-
-        ↓
-
-PagerDuty Process Automation / Shoreline
+## PagerDuty Process Automation / Shoreline
 Self-healing automation platform that executes remediation scripts based on alerts.
+
 PLACE:
 - SaaS Platform OR Agent Installed On EC2 / Kubernetes
 
@@ -291,29 +302,39 @@ OUTPUT:
 - Kill Hung Process
 - Drain Node
 
-        ↓
+---
 
-LitmusChaos
-Chaos engineering framework for testing system resilience and validating self-healing mechanisms.
-PLACE:
-- Runs As:
-    Kubernetes Pod
+### Explanation of Flow:
 
-INPUT:
-- Chaos Experiment YAML
+* **Terraform → Helm → Kubernetes → ArgoCD**
+  Base deployment: IaC provisions infra, Helm deploys apps, Kubernetes orchestrates, ArgoCD ensures GitOps sync.
 
-OUTPUT:
-- Simulated Pod Kill
-- Node Crash
-- Network Delay
-- Validates:
-    Pod Recreation
-    Auto Scaling
-    Traffic Rerouting
-    Deployment Rollback
-```
+* **Kubernetes → HPA / KEDA → Kubernetes**
+  Autoscaling triggered by metrics/events.
 
-Terraform → Helm → Kubernetes → OpenTelemetry → Prometheus → ELK → Grafana → HPA/KEDA → Cluster Autoscaler → ArgoCD → OPA → Istio → Jaeger → PagerDuty/Shoreline → LitmusChaos
+* **Kubernetes → Cluster Autoscaler → AWS Nodes**
+  Scale nodes automatically based on pending pods or resource pressure.
+
+* **Kubernetes → OpenTelemetry → Prometheus / ELK Stack → Grafana → HPA / KEDA**
+  Observability loop: metrics/logs feed auto-scaling and alerting.
+
+* **Grafana → PagerDuty / Shoreline**
+  Alerts trigger self-healing actions.
+
+* **Kubernetes → Istio**
+  Service-to-service routing, retries, circuit breaking, outlier detection.
+
+* **Kubernetes → Jaeger**
+  Tracing for slow services, DB delays, and dependency timeouts.
+
+* **Kubernetes → OPA**
+  Policy enforcement to block unsafe deployments.
+
+* **LitmusChaos → Kubernetes**
+  Chaos experiments simulate failures to test auto-healing.
+
+* **PagerDuty / Shoreline → Kubernetes**
+  Automatic remediation scripts act on detected failures.
 
 
 ## Project Structure

@@ -1,0 +1,20 @@
+replicaCount: 1
+
+image:
+  repository: golang
+  tag: "1.22"
+  pullPolicy: IfNotPresent
+
+services:
+  order:
+    port: 8080
+  payment:
+    port: 8081
+  inventory:
+    port: 8082
+  notification:
+    port: 8083
+  analytics:
+    port: 8084
+  read:
+    port: 8085
