@@ -1,0 +1,25 @@
+{{- range $name, $cfg := .Values }}
+{{- if kindIs "map" $cfg }}
+{{- if $cfg.keda }}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ $name }}
+spec:
+  scaleTargetRef:
+    name: {{ $name }}
+  minReplicaCount: {{ $cfg.keda.minReplicas }}
+  maxReplicaCount: {{ $cfg.keda.maxReplicas }}
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: {{ $cfg.keda.bootstrapServers }}
+        consumerGroup: {{ $cfg.keda.consumerGroup }}
+        topic: {{ $cfg.keda.topic }}
+        lagThreshold: {{ $cfg.keda.lagThreshold | quote }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+

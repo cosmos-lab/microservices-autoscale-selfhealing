@@ -50,4 +50,31 @@ product-service:
     scaleDownStabilizationSeconds: 60
     scaleDownPeriodSeconds: 30
 
+inventory-service:
+  replicaCount: 1
+  image:
+    repository: localhost:32000/inventory-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 8080
+    nodePort: 30083
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+  hpa:
+    enabled: false
+  keda:
+    minReplicas: 1
+    maxReplicas: 10
+    consumerGroup: inventory-service
+    topic: orders
+    lagThreshold: "5"
+    bootstrapServers: kafka.default.svc.cluster.local:9092
+
 

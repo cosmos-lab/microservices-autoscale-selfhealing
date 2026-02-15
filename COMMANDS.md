@@ -5,12 +5,17 @@
 ```
 curl -X POST http://localhost:8080/order/create \
      -H "Content-Type: application/json" \
-     -d '{"productId": "p-99", "productName": "Gaming Mouse"}'
+     -d '{"productId": "p-99", "productName": "Gaming Mouse", "quantity": 1}'
 
 //Load test order
-hey -z 10s -c 50 -m POST \
+hey -z 100s -c 50 -m POST \
     -H "Content-Type: application/json" \
-    -d '{"productId": "p-99", "productName": "Gaming Mouse"}' \
+    -d '{"productId": "1", "productName": "Gaming Mouse", "quantity": 1}' \
+    http://localhost:30081/order/create
+
+hey -z 120s -c 200 -m POST \
+    -H "Content-Type: application/json" \
+    -d '{"productId": "1", "productName": "Gaming Mouse", "quantity": 1}' \
     http://localhost:30081/order/create
 
 
@@ -35,24 +40,31 @@ hey -z 10s -c 50 -m POST \
 ```
 ../tools/llmcode/export_code.sh \
 "./services,"\
+"./helm,"\
 "./tmp" \
 "./main.go" \
 "./tmp" \
 "./services/product/go.mod,"\
 "./services/product/go.sum,"\
-"./services/product/go.mod,"\
-"./services/product/go.sum" \
+"./services/order/go.mod,"\
+"./services/order/go.sum" \
 "output.txt"
 
 
 ../tools/llmcode/export_code.sh \
-"./helm,"\
-"./tmp" \
+"./helm"\
 "./tmp.go" \
 "./tmp" \
 "./tmp.go" \
 "output.txt"
 
+
+../tools/llmcode/export_code.sh \
+"./services"\
+"./tmp.go" \
+"./tmp" \
+"./tmp.go" \
+"output.txt"
 
 ../../../tools/llmcode/export_structure.sh \
   ./ \
@@ -66,55 +78,46 @@ hey -z 10s -c 50 -m POST \
 
 # Monitor
 
----
-
-**Pods — how many are running**
 ```bash
+watch -n 1 '
+echo "=== PODS ==="
 microk8s kubectl get pods
-microk8s kubectl get pods -w
-```
 
----
-
-**HPA — current replicas + CPU vs target**
-```bash
+echo ""
+echo "=== HPA ==="
 microk8s kubectl get hpa
-# detailed view with events (scale up/down history)
-microk8s kubectl describe hpa order-service
-microk8s kubectl describe hpa product-service
-```
-The `get hpa` output is the most useful — it shows:
-```
-NAME              MINPODS  MAXPODS  REPLICAS  TARGETS    AGE
-order-service     1        5        1         12%/60%    2m
-product-service   1        5        1         8%/60%     2m
-```
-`TARGETS` = `current%/threshold%` — when current hits 60% it will scale up.
 
----
+echo ""
+echo "=== KEDA ==="
+microk8s kubectl get scaledobjects
 
-**Metrics — actual CPU/memory per pod**
-```bash
+echo ""
+echo "=== CPU/MEM ==="
 microk8s kubectl top pods
-microk8s kubectl top nodes
-```
 
+echo ""
+echo "=== KAFKA LAG ==="
+microk8s kubectl exec -it \
+  $(microk8s kubectl get pod -l app=kafka -o jsonpath="{.items[0].metadata.name}") \
+  -- kafka-consumer-groups \
+  --bootstrap-server localhost:9092 \
+  --describe \
+  --group inventory-service 2>/dev/null
+'
+```
 ---
 
-**Watch everything at once (best for load testing)**
-```bash
-watch -n 0.5 'microk8s kubectl get pods,hpa && echo "" && microk8s kubectl top pods'
-```
-This refreshes every 2 seconds showing pods, HPA state, and live CPU together in one terminal.
 
----
-
-**Trigger load to actually see scaling** — simplest way with just `curl` in a loop:
-```bash
-for i in $(seq 1 1000); do
-  curl -s -X POST http://localhost:30081/order/create \
-    -H "Content-Type: application/json" \
-    -d '{"productId":"1","productName":"Laptop"}' &
-done
+# Logs
 ```
-Then watch the `watch` command above — you should see `REPLICAS` climb from 1 toward 5 as CPU crosses 60%.
+microk8s kubectl get pods | grep zookeeper
+
+microk8s kubectl logs kafka-5b444c499-dc5w2 
+microk8s kubectl describe pod kafka-5b444c499-dc5w2
+
+microk8s kubectl logs zookeeper-747788f8c9-xpjgh
+
+
+
+
+```
