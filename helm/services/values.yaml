@@ -22,6 +22,8 @@ order-service:
     minReplicas: 1
     maxReplicas: 5
     targetCPUPercent: 60
+    scaleDownStabilizationSeconds: 60
+    scaleDownPeriodSeconds: 30
 
 product-service:
   replicaCount: 1
@@ -45,5 +47,7 @@ product-service:
     minReplicas: 1
     maxReplicas: 5
     targetCPUPercent: 60
+    scaleDownStabilizationSeconds: 60
+    scaleDownPeriodSeconds: 30
 
 

@@ -44,6 +44,16 @@ hey -z 10s -c 50 -m POST \
 "./services/product/go.sum" \
 "output.txt"
 
+
+../tools/llmcode/export_code.sh \
+"./helm,"\
+"./tmp" \
+"./tmp.go" \
+"./tmp" \
+"./tmp.go" \
+"output.txt"
+
+
 ../../../tools/llmcode/export_structure.sh \
   ./ \
   tmp \

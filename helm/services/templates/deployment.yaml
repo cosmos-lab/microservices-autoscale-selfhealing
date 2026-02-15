@@ -1,5 +1,6 @@
 {{- range $name, $cfg := .Values }}
 {{- if kindIs "map" $cfg }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,7 +27,6 @@ spec:
             - containerPort: 8080
           resources:
             {{- toYaml $cfg.resources | nindent 12 }}
----
 {{- end }}
 {{- end }}
 

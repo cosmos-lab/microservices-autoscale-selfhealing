@@ -1,6 +1,7 @@
 {{- range $name, $cfg := .Values }}
 {{- if kindIs "map" $cfg }}
 {{- if $cfg.hpa.enabled }}
+---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -19,9 +20,19 @@ spec:
         target:
           type: Utilization
           averageUtilization: {{ $cfg.hpa.targetCPUPercent }}
----
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ $cfg.hpa.scaleDownStabilizationSeconds }}
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: {{ $cfg.hpa.scaleDownPeriodSeconds }}
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
 {{- end }}
 {{- end }}
 {{- end }}
-
-
