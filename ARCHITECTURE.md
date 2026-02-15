@@ -195,7 +195,6 @@ OUTPUT:
 - Route Traffic To Healthy Pod
 - Outlier Detection (Kicks Failing Pods Out Before Crash)
 
-        ↓
 
 
 ## Prometheus

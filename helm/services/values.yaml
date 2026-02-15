@@ -1,0 +1,39 @@
+registry: localhost:32000
+
+order-service:
+  replicaCount: 1
+  image:
+    repository: localhost:32000/order-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 8080
+    nodePort: 30081
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+product-service:
+  replicaCount: 1
+  image:
+    repository: localhost:32000/product-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 8080
+    nodePort: 30082
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+
