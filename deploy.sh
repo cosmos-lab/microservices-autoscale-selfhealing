@@ -4,7 +4,7 @@ set -e
 REGISTRY="localhost:32000"
 
 echo ">>> Enabling microk8s addons..."
-microk8s enable registry helm3
+microk8s enable registry helm3 metrics-server
 
 echo ">>> Building images with Podman..."
 podman build -t ${REGISTRY}/order-service:latest   ./services/order
@@ -19,7 +19,7 @@ microk8s helm3 upgrade --install services ./helm/services
 
 echo ""
 echo ">>> Status:"
-microk8s kubectl get pods,svc
+microk8s kubectl get pods,svc,hpa
 
 echo ""
 echo ">>> Endpoints:"

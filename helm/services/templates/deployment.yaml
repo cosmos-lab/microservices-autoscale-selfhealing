@@ -7,7 +7,9 @@ metadata:
   labels:
     app: {{ $name }}
 spec:
+  {{- if not $cfg.hpa.enabled }}
   replicas: {{ $cfg.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       app: {{ $name }}

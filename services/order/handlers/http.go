@@ -19,6 +19,10 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
+	SimulateCPULoad(2000000)
+	SimulateMemoryLoad(70)
+	SimulateDelay(3000)
+
 	c.JSON(http.StatusOK, gin.H{
 		"orderId":     "order-123",
 		"status":      "created",

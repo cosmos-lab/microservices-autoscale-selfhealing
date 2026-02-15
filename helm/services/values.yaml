@@ -17,6 +17,11 @@ order-service:
     requests:
       cpu: 100m
       memory: 64Mi
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUPercent: 60
 
 product-service:
   replicaCount: 1
@@ -35,5 +40,10 @@ product-service:
     requests:
       cpu: 100m
       memory: 64Mi
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUPercent: 60
 
 
