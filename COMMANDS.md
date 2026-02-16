@@ -52,7 +52,7 @@ hey -z 10s -c 50 -m POST \
 
 
 ../tools/llmcode/export_code.sh \
-"./helm"\
+"./helm" \
 "./tmp.go" \
 "./tmp" \
 "./tmp.go" \
@@ -110,14 +110,27 @@ microk8s kubectl exec -it \
 
 # Logs
 ```
-microk8s kubectl get pods | grep zookeeper
+# logs
+microk8s kubectl logs -l app=kafka
 
-microk8s kubectl logs kafka-5b444c499-dc5w2 
-microk8s kubectl describe pod kafka-5b444c499-dc5w2
+# logs for init container
+microk8s kubectl logs -l app=kafka -c wait-for-zookeeper
 
-microk8s kubectl logs zookeeper-747788f8c9-xpjgh
+# describe
+microk8s kubectl describe pod -l app=kafka
 
+# exec into it
+microk8s kubectl exec -it -l app=kafka -- sh
 
+microk8s kubectl logs -l app=kafka --previous
 
 
 ```
+
+
+#
+
+```
+microk8s kubectl get all -n kube-system
+
+``
