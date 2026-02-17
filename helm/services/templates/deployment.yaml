@@ -1,5 +1,5 @@
 {{- range $name, $cfg := .Values }}
-{{- if kindIs "map" $cfg }}
+{{- if and (kindIs "map" $cfg) (hasKey $cfg "image") }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -8,7 +8,10 @@ metadata:
   labels:
     app: {{ $name }}
 spec:
-  {{- if not $cfg.hpa.enabled }}
+  {{- if and
+        (not (and (hasKey $cfg "hpa") $cfg.hpa.enabled))
+        (not (hasKey $cfg "keda"))
+  }}
   replicas: {{ $cfg.replicaCount }}
   {{- end }}
   selector:
@@ -25,9 +28,15 @@ spec:
           imagePullPolicy: {{ $cfg.image.pullPolicy }}
           ports:
             - containerPort: 8080
+          {{- if $cfg.env }}
+          env:
+            {{- range $key, $val := $cfg.env }}
+            - name: {{ $key }}
+              value: {{ $val | quote }}
+            {{- end }}
+          {{- end }}
           resources:
             {{- toYaml $cfg.resources | nindent 12 }}
 {{- end }}
 {{- end }}
-
 

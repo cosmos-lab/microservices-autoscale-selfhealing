@@ -3,7 +3,7 @@
 # Test APIs
 
 ```
-curl -X POST http://localhost:8080/order/create \
+curl -X POST http://localhost:30081/order \
      -H "Content-Type: application/json" \
      -d '{"productId": "p-99", "productName": "Gaming Mouse", "quantity": 1}'
 
@@ -11,7 +11,7 @@ curl -X POST http://localhost:8080/order/create \
 hey -z 100s -c 50 -m POST \
     -H "Content-Type: application/json" \
     -d '{"productId": "1", "productName": "Gaming Mouse", "quantity": 1}' \
-    http://localhost:30081/order/create
+    http://localhost:30081/order
 
 hey -z 120s -c 200 -m POST \
     -H "Content-Type: application/json" \
@@ -30,49 +30,6 @@ hey -z 10s -c 50 -m POST \
     -d '{"id": "test", "name": "stress-test"}' \
     http://localhost:30082/product
 
-
-
-
-```
-
-# **LLM Code** #
-
-```
-../tools/llmcode/export_code.sh \
-"./services,"\
-"./helm,"\
-"./tmp" \
-"./main.go" \
-"./tmp" \
-"./services/product/go.mod,"\
-"./services/product/go.sum,"\
-"./services/order/go.mod,"\
-"./services/order/go.sum" \
-"output.txt"
-
-
-../tools/llmcode/export_code.sh \
-"./helm" \
-"./tmp.go" \
-"./tmp" \
-"./tmp.go" \
-"output.txt"
-
-
-../tools/llmcode/export_code.sh \
-"./services"\
-"./tmp.go" \
-"./tmp" \
-"./tmp.go" \
-"output.txt"
-
-../../../tools/llmcode/export_structure.sh \
-  ./ \
-  tmp \
-  output.txt
-
-
-../tools/llmcode/import_code.sh input.txt ./
 
 ```
 
@@ -110,27 +67,66 @@ microk8s kubectl exec -it \
 
 # Logs
 ```
-# logs
-microk8s kubectl logs -l app=kafka
-
-# logs for init container
-microk8s kubectl logs -l app=kafka -c wait-for-zookeeper
-
-# describe
 microk8s kubectl describe pod -l app=kafka
 
-# exec into it
-microk8s kubectl exec -it -l app=kafka -- sh
+microk8s kubectl logs -l app=kafka -f
+microk8s kubectl logs -l app=kafka -c wait-for-zookeeper
 
-microk8s kubectl logs -l app=kafka --previous
+microk8s kubectl logs -l app=inventory-service -f
+microk8s kubectl logs -l app=order-service -f
 
+microk8s kubectl describe scaledobject inventory-service
 
-```
-
-
-#
 
 ```
-microk8s kubectl get all -n kube-system
 
-``
+
+# **LLM Code** #
+
+```
+../tools/llmcode/export_code.sh \
+"./services,"\
+"./helm,"\
+"./tmp" \
+"./deploy.sh,"\
+"./main.go" \
+"./tmp" \
+"./services/product/go.mod,"\
+"./services/product/go.sum,"\
+"./services/inventory/go.mod,"\
+"./services/inventory/go.sum,"\
+"./services/order/go.mod,"\
+"./services/order/go.sum" \
+"output.txt"
+
+
+../tools/llmcode/export_code.sh \
+"./helm" \
+"./deploy.sh" \
+"./tmp" \
+"./tmp.go" \
+"output.txt"
+
+
+../tools/llmcode/export_code.sh \
+"./services,"\
+"./tmp" \
+"./main.go" \
+"./tmp" \
+"./services/product/go.mod,"\
+"./services/product/go.sum,"\
+"./services/inventory/go.mod,"\
+"./services/inventory/go.sum,"\
+"./services/order/go.mod,"\
+"./services/order/go.sum" \
+"output.txt"
+
+../../../tools/llmcode/export_structure.sh \
+  ./ \
+  tmp \
+  output.txt
+
+
+../tools/llmcode/import_code.sh input.txt ./
+
+```

@@ -1,5 +1,5 @@
 {{- range $name, $cfg := .Values }}
-{{- if kindIs "map" $cfg }}
+{{- if and (kindIs "map" $cfg) (hasKey $cfg "image") }}
 ---
 apiVersion: v1
 kind: Service
@@ -14,8 +14,9 @@ spec:
   ports:
     - port: {{ $cfg.service.port }}
       targetPort: 8080
+      {{- if eq $cfg.service.type "NodePort" }}
       nodePort: {{ $cfg.service.nodePort }}
+      {{- end }}
 {{- end }}
 {{- end }}
-
 

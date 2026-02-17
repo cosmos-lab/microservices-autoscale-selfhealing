@@ -17,6 +17,8 @@ order-service:
     requests:
       cpu: 100m
       memory: 64Mi
+  env:
+    KAFKA_BROKER: kafka-broker.default.svc.cluster.local:9092
   hpa:
     enabled: true
     minReplicas: 1
@@ -67,6 +69,8 @@ inventory-service:
     requests:
       cpu: 100m
       memory: 64Mi
+  env:
+    KAFKA_BROKER: kafka-broker.default.svc.cluster.local:9092
   hpa:
     enabled: false
   keda:
@@ -75,6 +79,6 @@ inventory-service:
     consumerGroup: inventory-service
     topic: orders
     lagThreshold: "5"
-    bootstrapServers: kafka.default.svc.cluster.local:9092
+    bootstrapServers: kafka-broker.default.svc.cluster.local:9092
 
 

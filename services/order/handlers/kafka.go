@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	kafkaBroker   = getEnv("KAFKA_BROKER", "kafka:9092")
+	kafkaBroker   = getEnv("KAFKA_BROKER", "kafka-broker.default.svc.cluster.local:9092")
 	pendingOrders = sync.Map{}
 )
 
@@ -52,26 +52,38 @@ func WaitForInventoryReply(orderID string, timeout time.Duration) (*InventoryEve
 func StartInventoryReplyConsumer() {
 	go func() {
 		r := kafka.NewReader(kafka.ReaderConfig{
-			Brokers: []string{kafkaBroker},
-			GroupID: "order-service",
-			Topic:   "inventory-reserved",
+			Brokers:        []string{kafkaBroker},
+			GroupID:        "order-service",
+			GroupTopics:    []string{"inventory-reserved", "inventory-failed"},
+			StartOffset:    kafka.FirstOffset,
+			CommitInterval: time.Second,
+			MinBytes:       1,
+			MaxBytes:       10e6,
 		})
 		defer r.Close()
-		consumeInventoryReplies(r, false)
-	}()
 
-	go func() {
-		r := kafka.NewReader(kafka.ReaderConfig{
-			Brokers: []string{kafkaBroker},
-			GroupID: "order-service",
-			Topic:   "inventory-failed",
-		})
-		defer r.Close()
-		consumeInventoryReplies(r, true)
+		for {
+			msg, err := r.FetchMessage(context.Background())
+			if err != nil {
+				continue
+			}
+
+			var event InventoryEvent
+			if err := json.Unmarshal(msg.Value, &event); err != nil {
+				continue
+			}
+
+			if val, ok := pendingOrders.Load(event.OrderID); ok {
+				ch := val.(chan *InventoryEvent)
+				ch <- &event
+			}
+
+			r.CommitMessages(context.Background(), msg)
+		}
 	}()
 }
 
-func consumeInventoryReplies(r *kafka.Reader, failed bool) {
+func consumeInventoryReplies(r *kafka.Reader) {
 	for {
 		msg, err := r.ReadMessage(context.Background())
 		if err != nil {
@@ -89,5 +101,3 @@ func consumeInventoryReplies(r *kafka.Reader, failed bool) {
 		}
 	}
 }
-
-

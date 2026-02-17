@@ -1,10 +1,14 @@
 package main
 
 import (
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
+
+var podName = os.Getenv("POD_NAME")
 
 type Product struct {
 	ID   string `json:"id"`
@@ -19,13 +23,20 @@ func main() {
 	r := gin.Default()
 
 	r.GET("/product/:id", func(c *gin.Context) {
+
 		id := c.Param("id")
+
+		log.Printf("PRODUCT_FETCH_REQUEST productId=%s pod=%s", id, podName)
+
 		for _, p := range products {
 			if p.ID == id {
+				log.Printf("PRODUCT_FOUND productId=%s pod=%s", id, podName)
 				c.JSON(http.StatusOK, p)
 				return
 			}
 		}
+
+		log.Printf("PRODUCT_NOT_FOUND productId=%s pod=%s", id, podName)
 		c.JSON(http.StatusNotFound, gin.H{"message": "not found"})
 	})
 

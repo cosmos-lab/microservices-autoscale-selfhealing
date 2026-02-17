@@ -1,13 +1,15 @@
 {{- range $name, $cfg := .Values }}
-{{- if kindIs "map" $cfg }}
-{{- if $cfg.keda }}
+{{- if and (kindIs "map" $cfg) (hasKey $cfg "image") }}
+{{- if hasKey $cfg "keda" }}
 ---
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
   name: {{ $name }}
+  namespace: default       
 spec:
   scaleTargetRef:
+    kind: Deployment
     name: {{ $name }}
   minReplicaCount: {{ $cfg.keda.minReplicas }}
   maxReplicaCount: {{ $cfg.keda.maxReplicas }}
@@ -18,8 +20,9 @@ spec:
         consumerGroup: {{ $cfg.keda.consumerGroup }}
         topic: {{ $cfg.keda.topic }}
         lagThreshold: {{ $cfg.keda.lagThreshold | quote }}
+        offsetResetPolicy: earliest
+        allowIdleConsumers: "true"
+        authenticationMode: none
 {{- end }}
 {{- end }}
 {{- end }}
-
-

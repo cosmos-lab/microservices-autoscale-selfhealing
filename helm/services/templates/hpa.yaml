@@ -1,6 +1,6 @@
 {{- range $name, $cfg := .Values }}
-{{- if kindIs "map" $cfg }}
-{{- if $cfg.hpa.enabled }}
+{{- if and (kindIs "map" $cfg) (hasKey $cfg "image") }}
+{{- if and (hasKey $cfg "hpa") $cfg.hpa.enabled }}
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -36,3 +36,4 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
+
