@@ -22,6 +22,10 @@ var products = []Product{
 func main() {
 	r := gin.Default()
 
+	r.GET("/health", func(c *gin.Context) {
+		c.Status(200)
+	})
+
 	r.GET("/product/:id", func(c *gin.Context) {
 
 		id := c.Param("id")

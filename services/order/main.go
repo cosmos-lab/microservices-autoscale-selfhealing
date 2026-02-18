@@ -17,6 +17,10 @@ func main() {
 
 	router := gin.Default()
 
+	router.GET("/health", func(c *gin.Context) {
+		c.Status(200)
+	})
+
 	router.POST("/order", handlers.CreateOrder)
 
 	port := os.Getenv("PORT")
