@@ -68,32 +68,12 @@ func CreateOrder(c *gin.Context) {
 
 	log.Printf("ORDER_PUBLISHED orderId=%s pod=%s", orderID, podName)
 
-	result, err := WaitForInventoryReply(orderID, 10*time.Second)
-	if err != nil {
-		log.Printf("INVENTORY_TIMEOUT orderId=%s pod=%s", orderID, podName)
-		c.JSON(http.StatusGatewayTimeout, gin.H{"error": "inventory service timeout"})
-		return
-	}
-
-	if result.Reason != "" {
-		log.Printf("ORDER_FAILED orderId=%s reason=%s pod=%s", orderID, result.Reason, podName)
-		c.JSON(http.StatusConflict, gin.H{
-			"orderId": orderID,
-			"status":  "failed",
-			"reason":  result.Reason,
-		})
-		return
-	}
-
-	log.Printf("ORDER_CONFIRMED orderId=%s newStock=%d pod=%s", orderID, result.NewStock, podName)
-
 	c.JSON(http.StatusOK, gin.H{
 		"orderId":     orderID,
 		"status":      "confirmed",
 		"productId":   req.ProductID,
 		"productName": req.ProductName,
 		"quantity":    req.Quantity,
-		"newStock":    result.NewStock,
 		"message":     "Order created and inventory reserved",
 	})
 }

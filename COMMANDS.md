@@ -5,7 +5,7 @@
 ```
 curl -X POST http://localhost:30081/order \
      -H "Content-Type: application/json" \
-     -d '{"productId": "p-99", "productName": "Gaming Mouse", "quantity": 1}'
+     -d '{"productId": "1", "productName": "Gaming Mouse", "quantity": 1}'
 
 //Load test order
 hey -z 100s -c 50 -m POST \
@@ -88,7 +88,6 @@ microk8s kubectl describe scaledobject inventory-service
 "./services,"\
 "./helm,"\
 "./tmp" \
-"./deploy.sh,"\
 "./main.go" \
 "./tmp" \
 "./services/product/go.mod,"\

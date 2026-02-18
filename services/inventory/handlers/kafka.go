@@ -39,39 +39,33 @@ func StartOrderConsumer() {
 	log.Println("🚀 Inventory Kafka Consumer Starting...")
 	log.Println("Connecting to broker:", kafkaBroker)
 
+	r := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:        []string{kafkaBroker},
+		GroupID:        "inventory-service",
+		Topic:          "orders",
+		StartOffset:    kafka.FirstOffset,
+		CommitInterval: time.Second,
+		MinBytes:       1,
+		MaxBytes:       10e6,
+	})
+
 	for {
-		r := kafka.NewReader(kafka.ReaderConfig{
-			Brokers:        []string{kafkaBroker},
-			GroupID:        "inventory-service",
-			Topic:          "orders",
-			StartOffset:    kafka.FirstOffset,
-			CommitInterval: time.Second,
-			MinBytes:       1,
-			MaxBytes:       10e6,
-		})
-
-		for {
-			msg, err := r.FetchMessage(context.Background())
-			if err != nil {
-				log.Println("❌ Kafka fetch error:", err)
-				time.Sleep(2 * time.Second)
-				continue
-			}
-
-			log.Println("📩 Message received from Kafka")
-
-			var event OrderEvent
-			if err := json.Unmarshal(msg.Value, &event); err != nil {
-				log.Println("❌ JSON unmarshal error:", err)
-				continue
-			}
-
-			processOrder(event)
-
-			if err := r.CommitMessages(context.Background(), msg); err != nil {
-				log.Println("❌ Commit failed:", err)
-			}
+		msg, err := r.ReadMessage(context.Background())
+		if err != nil {
+			log.Println("❌ Kafka read error:", err)
+			time.Sleep(2 * time.Second)
+			continue
 		}
+
+		log.Println("📩 Message received from Kafka")
+
+		var event OrderEvent
+		if err := json.Unmarshal(msg.Value, &event); err != nil {
+			log.Println("❌ JSON unmarshal error:", err)
+			continue
+		}
+
+		processOrder(event)
 	}
 }
 
